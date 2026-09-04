@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MATRIX FOREX SESSION TERMINAL</title>
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --bg-0:#050706;
+  --bg-1:#0a0f0c;
+  --panel:#0d1310;
+  --panel-2:#0f1613;
+  --line:#1c2620;
+  --line-soft:#141c18;
+  --green:#39ff8f;
+  --green-dim:#1a5c3c;
+  --cyan:#4ff2e8;
+  --cyan-dim:#1a4d4a;
+  --orange:#ff9d3d;
+  --orange-dim:#5c3c14;
+  --red:#ff3b4e;
+  --red-dim:#5c1420;
+  --text-0:#d9ffe8;
+  --text-1:#7fa895;
+  --text-2:#4c6459;
+  --font-mono:'Consolas','SFMono-Regular','JetBrains Mono','Roboto Mono',ui-monospace,monospace;
+  --font-display:'Orbitron','Consolas',ui-monospace,monospace;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+html,body{
+  height:100%;
+  background:var(--bg-0);
+  color:var(--text-0);
+  font-family:var(--font-mono);
+  overflow-x:hidden;
+}
+
+body{
+  min-height:100vh;
+  position:relative;
+  padding:14px 18px 40px;
+}
+
+/* ============================================================
+   BACKGROUND LAYERS
+   ============================================================ */
+#bg-canvas{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  opacity:.22;
+  pointer-events:none;
+}
+
+.bg-grid{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  background-image:
+    linear-gradient(to right, rgba(57,255,143,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(57,255,143,0.05) 1px, transparent 1px);
+  background-size:42px 42px;
+  -webkit-mask-image:radial-gradient(ellipse 90% 70% at 50% 20%, black 0%, transparent 75%);
+  mask-image:radial-gradient(ellipse 90% 70% at 50% 20%, black 0%, transparent 75%);
+  pointer-events:none;
+}
+
+.bg-glow{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 0%, rgba(57,255,143,0.07), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 100% 10%, rgba(79,242,232,0.05), transparent 60%);
+  pointer-events:none;
+}
+
+.bg-scanlines{
+  position:fixed;
+  inset:0;
+  z-index:1;
+  background:repeating-linear-gradient(
+    to bottom,
+    rgba(0,0,0,0) 0px,
+    rgba(0,0,0,0) 2px,
+    rgba(0,0,0,0.10) 3px
+  );
+  opacity:.35;
+  pointer-events:none;
+  mix-blend-mode:overlay;
+}
+
+.bg-vignette{
+  position:fixed;
+  inset:0;
+  z-index:1;
+  background:radial-gradient(ellipse 100% 100% at 50% 30%, transparent 55%, rgba(0,0,0,0.55) 100%);
+  pointer-events:none;
+}
+
+.app{
+  position:relative;
+  z-index:2;
+  max-width:1400px;
+  margin:0 auto;
+}
+
+/* ============================================================
+   SHARED PANEL LOOK
+   ============================================================ */
+.panel{
+  background:linear-gradient(180deg, var(--panel), var(--panel-2));
+  border:1px solid var(--line);
+  border-radius:3px;
+  position:relative;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.02),
+    0 12px 30px -20px rgba(0,0,0,0.8);
+}
+.panel::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:3px;
+  padding:1px;
+  pointer-events:none;
+  background:linear-gradient(135deg, rgba(57,255,143,0.15), transparent 30%, transparent 70%, rgba(79,242,232,0.10));
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+}
+
+.eyebrow{
+  font-size:10px;
+  letter-spacing:.22em;
+  color:var(--text-2);
+  text-transform:uppercase;
+  font-weight:600;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+header.top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  padding:16px 22px;
+  margin-bottom:16px;
+  flex-wrap:wrap;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.brand-mark{
+  width:38px;height:38px;
+  border:1px solid var(--green-dim);
+  border-radius:3px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--green);
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:15px;
+  background:radial-gradient(circle at 30% 20%, rgba(57,255,143,.18), transparent 70%);
+  text-shadow:0 0 12px rgba(57,255,143,.6);
+  flex-shrink:0;
+}
+.brand-text h1{
+  font-family:var(--font-display);
+  font-size:16px;
+  letter-spacing:.14em;
+  color:var(--text-0);
+  font-weight:700;
+  text-shadow:0 0 18px rgba(57,255,143,.25);
+}
+.brand-text .sub{
+  font-size:10px;
+  letter-spacing:.18em;
+  color:var(--text-2);
+  margin-top:3px;
+}
+
+.header-center{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+}
+.header-center .eyebrow{text-align:center;}
+.header-center .live-clock{
+  font-family:var(--font-display);
+  font-size:26px;
+  letter-spacing:.06em;
+  color:var(--green);
+  text-shadow:0 0 20px rgba(57,255,143,.45);
+  font-variant-numeric:tabular-nums;
+}
+
+.header-right{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+.status-mini{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:2px;
+  font-size:10px;
+  letter-spacing:.12em;
+  color:var(--text-2);
+}
+.status-mini .val{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  color:var(--text-0);
+  font-size:11px;
+}
+.dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 8px var(--green);
+  flex-shrink:0;
+}
+.dot.off{background:var(--text-2);box-shadow:none;}
+
+.refresh-btn{
+  width:30px;height:30px;
+  border-radius:3px;
+  border:1px solid var(--line);
+  background:var(--panel-2);
+  color:var(--text-1);
+  font-size:15px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .3s ease, color .2s ease, border-color .2s ease;
+}
+.refresh-btn:hover{color:var(--green);border-color:var(--green-dim);}
+.refresh-btn.spin{transform:rotate(340deg);}
+
+/* ============================================================
+   CLOCK GRID
+   ============================================================ */
+.section-label{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:26px 4px 10px;
+  color:var(--text-2);
+  font-size:10px;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+}
+.section-label::after{
+  content:"";
+  flex:1;
+  height:1px;
+  background:linear-gradient(to right, var(--line), transparent);
+}
+
+.clock-grid{
+  display:grid;
+  grid-template-columns:repeat(6, 1fr);
+  gap:10px;
+}
+.clock-card{
+  padding:16px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-height:108px;
+}
+.clock-card .loc-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.clock-card .loc{
+  font-size:11px;
+  letter-spacing:.12em;
+  color:var(--text-1);
+  font-weight:600;
+}
+.clock-card .led-sm{
+  width:6px;height:6px;border-radius:50%;
+}
+.clock-card .time{
+  font-family:var(--font-display);
+  font-size:25px;
+  letter-spacing:.02em;
+  color:var(--text-0);
+  font-variant-numeric:tabular-nums;
+}
+.clock-card.utc .time{color:var(--cyan);text-shadow:0 0 14px rgba(79,242,232,.3);}
+.clock-card .meta{
+  display:flex;
+  justify-content:space-between;
+  font-size:9.5px;
+  color:var(--text-2);
+  letter-spacing:.06em;
+}
+.clock-card .meta .badge{
+  color:var(--text-1);
+}
+
+/* ============================================================
+   MARKET STATUS CENTER
+   ============================================================ */
+.status-center{
+  display:grid;
+  grid-template-columns:1.15fr 1fr;
+  gap:12px;
+  margin-top:22px;
+}
+
+.market-core{
+  padding:26px 30px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  position:relative;
+  overflow:hidden;
+}
+.market-core .led-big{
+  width:60px;height:60px;
+  border-radius:50%;
+  position:relative;
+  flex-shrink:0;
+}
+.market-core .core-text .eyebrow{margin-bottom:6px;}
+.market-core .core-text h2{
+  font-family:var(--font-display);
+  font-size:30px;
+  letter-spacing:.08em;
+  font-weight:700;
+}
+.market-core .core-text p{
+  font-size:10.5px;
+  color:var(--text-2);
+  margin-top:6px;
+  letter-spacing:.04em;
+}
+.market-core.open h2{color:var(--green);text-shadow:0 0 22px rgba(57,255,143,.5);}
+.market-core.closed h2{color:var(--red);text-shadow:0 0 22px rgba(255,59,78,.5);}
+
+.overlap-panel{
+  padding:20px 24px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:10px;
+  position:relative;
+  overflow:hidden;
+}
+.overlap-panel .ov-row{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.overlap-panel .ov-city{
+  font-family:var(--font-display);
+  font-size:16px;
+  letter-spacing:.08em;
+  color:var(--text-1);
+  transition:color .4s ease, text-shadow .4s ease;
+}
+.overlap-panel.active .ov-city{color:var(--green);text-shadow:0 0 14px rgba(57,255,143,.5);}
+.overlap-panel .ov-link{
+  flex:1;
+  height:2px;
+  background:var(--line);
+  position:relative;
+  overflow:hidden;
+  border-radius:2px;
+}
+.overlap-panel.active .ov-link{background:var(--green-dim);}
+.overlap-panel .ov-link .pulse{
+  position:absolute;
+  top:0;left:-30%;
+  width:30%;height:100%;
+  background:linear-gradient(to right, transparent, var(--green), var(--cyan), transparent);
+  animation:linkmove 2.2s linear infinite;
+  opacity:0;
+}
+.overlap-panel.active .ov-link .pulse{opacity:1;}
+@keyframes linkmove{
+  0%{left:-30%;}
+  100%{left:100%;}
+}
+.overlap-panel .ov-status{
+  font-size:10px;
+  letter-spacing:.18em;
+  color:var(--text-2);
+}
+.overlap-panel.active .ov-status{color:var(--green);}
+.overlap-panel .ov-empty{
+  font-size:11px;
+  color:var(--text-2);
+  letter-spacing:.1em;
+}
+
+/* ============================================================
+   SESSION MONITOR CARDS
+   ============================================================ */
+.session-grid{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:12px;
+  margin-top:6px;
+}
+.session-card{
+  padding:20px 20px 18px;
+  position:relative;
+  overflow:hidden;
+  transition:box-shadow .5s ease, border-color .5s ease;
+}
+.session-card.active{
+  border-color:var(--green-dim);
+  box-shadow:0 0 0 1px rgba(57,255,143,.12), 0 0 34px -10px rgba(57,255,143,.35);
+}
+.session-card.flash{
+  animation:flashpulse 1.1s ease-out 1;
+}
+@keyframes flashpulse{
+  0%{box-shadow:0 0 0 1px rgba(57,255,143,0), 0 0 0px rgba(57,255,143,0);}
+  30%{box-shadow:0 0 0 1px rgba(57,255,143,.5), 0 0 60px -5px rgba(57,255,143,.7);}
+  100%{box-shadow:0 0 0 1px rgba(57,255,143,.12), 0 0 34px -10px rgba(57,255,143,.35);}
+}
+.session-card .sc-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:18px;
+}
+.session-card .sc-name{
+  font-family:var(--font-display);
+  font-size:14px;
+  letter-spacing:.14em;
+  color:var(--text-0);
+}
+.session-card .sc-time{
+  font-family:var(--font-display);
+  font-size:28px;
+  color:var(--text-0);
+  font-variant-numeric:tabular-nums;
+  margin-bottom:6px;
+}
+.session-card .sc-tz{
+  font-size:9.5px;
+  color:var(--text-2);
+  letter-spacing:.08em;
+  margin-bottom:16px;
+}
+.session-card .sc-foot{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.sc-status-text{
+  font-size:10px;
+  letter-spacing:.16em;
+  font-weight:600;
+}
+.sc-status-text.state-active{color:var(--green);}
+.sc-status-text.state-closed{color:var(--orange);}
+.sc-status-text.state-marketclosed{color:var(--red);}
+
+/* LED */
+.led{
+  --led-color:var(--text-2);
+  width:16px;height:16px;
+  border-radius:50%;
+  position:relative;
+  background:radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--led-color) 90%, white 10%), var(--led-color) 55%, color-mix(in srgb, var(--led-color) 60%, black 40%) 100%);
+  box-shadow:0 0 10px 1px color-mix(in srgb, var(--led-color) 55%, transparent);
+}
+.led.state-active{--led-color:var(--green); box-shadow:0 0 4px 1px var(--green), 0 0 22px 4px rgba(57,255,143,.55);}
+.led.state-closed{--led-color:var(--orange); box-shadow:0 0 4px 1px var(--orange), 0 0 14px 2px rgba(255,157,61,.35);}
+.led.state-marketclosed{--led-color:var(--red); box-shadow:0 0 4px 1px var(--red), 0 0 18px 3px rgba(255,59,78,.45);}
+.led.state-active.pulse-on{animation:ledpulse 1.1s ease-out 1;}
+@keyframes ledpulse{
+  0%{transform:scale(1); box-shadow:0 0 4px 1px var(--green);}
+  40%{transform:scale(1.5); box-shadow:0 0 10px 3px var(--green), 0 0 40px 10px rgba(57,255,143,.7);}
+  100%{transform:scale(1); box-shadow:0 0 4px 1px var(--green), 0 0 22px 4px rgba(57,255,143,.55);}
+}
+
+/* ============================================================
+   TIMELINE
+   ============================================================ */
+.timeline-panel{
+  margin-top:22px;
+  padding:22px 26px 26px;
+}
+.timeline-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  margin-bottom:18px;
+}
+.timeline-head h3{
+  font-family:var(--font-display);
+  font-size:12px;
+  letter-spacing:.16em;
+  color:var(--text-1);
+}
+.timeline-head .tl-now{
+  font-size:11px;
+  color:var(--green);
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.05em;
+}
+
+.tl-hours{
+  display:grid;
+  grid-template-columns:90px 1fr;
+  font-size:9px;
+  color:var(--text-2);
+  letter-spacing:.05em;
+  margin-bottom:8px;
+}
+.tl-hours .hspacer{}
+.tl-hours .hlabels{
+  display:flex;
+  justify-content:space-between;
+}
+
+.tl-row{
+  display:grid;
+  grid-template-columns:90px 1fr;
+  align-items:center;
+  gap:0;
+  margin-bottom:10px;
+}
+.tl-row .tl-name{
+  font-size:10.5px;
+  letter-spacing:.1em;
+  color:var(--text-1);
+  font-weight:600;
+}
+.tl-track{
+  position:relative;
+  height:20px;
+  background:var(--bg-1);
+  border:1px solid var(--line-soft);
+  border-radius:2px;
+  overflow:hidden;
+}
+.tl-bar{
+  position:absolute;
+  top:0;bottom:0;
+  background:linear-gradient(90deg, rgba(57,255,143,.14), rgba(57,255,143,.34));
+  border-left:1px solid rgba(57,255,143,.5);
+  border-right:1px solid rgba(57,255,143,.5);
+}
+.tl-bar.dim{
+  background:linear-gradient(90deg, rgba(127,168,149,.06), rgba(127,168,149,.12));
+  border-left:1px solid rgba(127,168,149,.25);
+  border-right:1px solid rgba(127,168,149,.25);
+}
+.tl-grid-line{
+  position:absolute;
+  top:0;bottom:0;
+  width:1px;
+  background:rgba(255,255,255,.04);
+}
+.tl-now-line{
+  position:absolute;
+  top:-3px;bottom:-3px;
+  width:2px;
+  background:var(--cyan);
+  box-shadow:0 0 8px var(--cyan), 0 0 16px var(--cyan);
+  z-index:5;
+}
+
+footer.foot{
+  text-align:center;
+  margin-top:30px;
+  font-size:9.5px;
+  letter-spacing:.15em;
+  color:var(--text-2);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1180px){
+  .clock-grid{grid-template-columns:repeat(3, 1fr);}
+  .session-grid{grid-template-columns:repeat(2, 1fr);}
+  .status-center{grid-template-columns:1fr;}
+}
+@media (max-width: 720px){
+  header.top{flex-direction:column;align-items:flex-start;gap:14px;}
+  .header-right{align-self:stretch;justify-content:space-between;}
+  .clock-grid{grid-template-columns:repeat(2, 1fr);}
+  .session-grid{grid-template-columns:1fr;}
+  .tl-hours,.tl-row{grid-template-columns:64px 1fr;}
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<div class="bg-scanlines"></div>
+<div class="bg-vignette"></div>
+
+<div class="app">
+
+  <header class="top panel">
+    <div class="brand">
+      <div class="brand-mark">M</div>
+      <div class="brand-text">
+        <h1>MATRIX FOREX SESSION TERMINAL</h1>
+        <div class="sub">GLOBAL MARKET TIME &amp; SESSION MONITOR</div>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="eyebrow">LIVE MARKET CLOCK — UTC</div>
+      <div class="live-clock" id="headerClock">00:00:00</div>
+    </div>
+
+    <div class="header-right">
+      <div class="status-mini">
+        <span>CONNECTION</span>
+        <span class="val" id="connStatus"><span class="dot" id="connDot"></span>ONLINE</span>
+      </div>
+      <div class="status-mini">
+        <span>SYSTEM</span>
+        <span class="val"><span class="dot"></span>NOMINAL</span>
+      </div>
+      <button class="refresh-btn" id="refreshBtn" title="Refresh timezone data">↻</button>
+    </div>
+  </header>
+
+  <div class="section-label">World Clocks</div>
+  <div class="clock-grid" id="clockGrid"></div>
+
+  <div class="section-label">Market Status</div>
+  <div class="status-center">
+    <div class="market-core panel" id="marketCore">
+      <div class="core-text">
+        <div class="eyebrow">FOREX MARKET</div>
+        <h2 id="marketState">—</h2>
+        <p id="marketSub">Checking session data…</p>
+      </div>
+      <div class="led-big led" id="marketLed"></div>
+    </div>
+
+    <div class="overlap-panel panel" id="overlapPanel">
+      <div class="eyebrow">ACTIVE SESSION OVERLAP</div>
+      <div id="overlapBody"><span class="ov-empty">NO ACTIVE OVERLAP</span></div>
+    </div>
+  </div>
+
+  <div class="section-label">Session Monitor</div>
+  <div class="session-grid" id="sessionGrid"></div>
+
+  <div class="timeline-panel panel">
+    <div class="timeline-head">
+      <h3>24-HOUR SESSION TIMELINE (IRAN TIME)</h3>
+      <div class="tl-now" id="tlNowLabel">—</div>
+    </div>
+    <div class="tl-hours">
+      <div class="hspacer"></div>
+      <div class="hlabels">
+        <span>00</span><span>03</span><span>06</span><span>09</span><span>12</span><span>15</span><span>18</span><span>21</span><span>24</span>
+      </div>
+    </div>
+    <div id="timelineBody"></div>
+  </div>
+
+  <footer class="foot">SESSION TIMES DERIVED FROM IANA TIME ZONE DATA — DST HANDLED AUTOMATICALLY</footer>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const ZONES = [
+  { key:'utc',    label:'UTC',       tz:'UTC',              clockCard:true },
+  { key:'iran',   label:'IRAN',      tz:'Asia/Tehran',       clockCard:true },
+  { key:'sydney', label:'SYDNEY',    tz:'Australia/Sydney',  clockCard:true, session:true },
+  { key:'tokyo',  label:'TOKYO',     tz:'Asia/Tokyo',        clockCard:true, session:true },
+  { key:'london', label:'LONDON',    tz:'Europe/London',     clockCard:true, session:true },
+  { key:'ny',     label:'NEW YORK',  tz:'America/New_York',  clockCard:true, session:true },
+];
+
+// Standard local trading-session hours per financial centre (24h, local time).
+const SESSION_HOURS = {
+  sydney: { start:8,  end:17 },
+  tokyo:  { start:9,  end:18 },
+  london: { start:8,  end:17 },
+  ny:     { start:8,  end:17 },
+};
+
+const SESSIONS = ZONES.filter(z => z.session);
+
+/* ============================================================
+   TIMEZONE ENGINE
+   ============================================================ */
+const formatters = {};
+function getFormatter(tz){
+  if(!formatters[tz]){
+    formatters[tz] = new Intl.DateTimeFormat('en-GB', {
+      timeZone:tz, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+    });
+  }
+  return formatters[tz];
+}
+function getPartsFormatter(tz){
+  const key = tz+'_parts';
+  if(!formatters[key]){
+    formatters[key] = new Intl.DateTimeFormat('en-US', {
+      timeZone:tz, weekday:'short', hour:'2-digit', minute:'2-digit', hour12:false
+    });
+  }
+  return formatters[key];
+}
+
+function getTimeString(tz, now){
+  return getFormatter(tz).format(now);
+}
+
+// Returns {weekday: 0-6 (Sun-Sat), hour, minute} for a given IANA zone.
+const WEEKDAY_MAP = {Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+function getLocalParts(tz, now){
+  const parts = getPartsFormatter(tz).formatToParts(now);
+  const map = {};
+  parts.forEach(p => map[p.type] = p.value);
+  return {
+    weekday: WEEKDAY_MAP[map.weekday],
+    hour: parseInt(map.hour, 10),
+    minute: parseInt(map.minute, 10)
+  };
+}
+
+/* ============================================================
+   MARKET STATUS ENGINE
+   Forex week is conventionally anchored to New York local time:
+   opens Sunday ~17:00 ET, closes Friday ~17:00 ET.
+   ============================================================ */
+function isMarketOpen(now){
+  const ny = getLocalParts('America/New_York', now);
+  if(ny.weekday === 6) return false; // Saturday
+  if(ny.weekday === 0 && ny.hour < 17) return false; // Sunday before open
+  if(ny.weekday === 5 && ny.hour >= 17) return false; // Friday after close
+  return true;
+}
+
+/* ============================================================
+   SESSION ENGINE
+   ============================================================ */
+function getSessionState(key, now, marketOpen){
+  if(!marketOpen) return 'marketclosed';
+  const {start,end} = SESSION_HOURS[key];
+  const local = getLocalParts(ZONES.find(z=>z.key===key).tz, now);
+  // Guard against local weekend edges (e.g. Sydney early Monday vs NY Sunday)
+  if(local.weekday === 0 || local.weekday === 6) return 'closed';
+  const inRange = local.hour >= start && local.hour < end;
+  return inRange ? 'active' : 'closed';
+}
+
+/* ============================================================
+   DOM BUILD — CLOCK GRID
+   ============================================================ */
+const clockGrid = document.getElementById('clockGrid');
+const clockEls = {};
+ZONES.forEach(z => {
+  const card = document.createElement('div');
+  card.className = 'clock-card panel' + (z.key==='utc' ? ' utc' : '');
+  card.innerHTML = `
+    <div class="loc-row">
+      <span class="loc">${z.label}</span>
+      ${z.session ? `<span class="led-sm led" data-led="${z.key}"></span>` : ''}
+    </div>
+    <div class="time" data-time="${z.key}">--:--:--</div>
+    <div class="meta">
+      <span>${z.tz}</span>
+      ${z.session ? `<span class="badge" data-badge="${z.key}">—</span>` : '<span></span>'}
+    </div>
+  `;
+  clockGrid.appendChild(card);
+  clockEls[z.key] = {
+    time: card.querySelector(`[data-time="${z.key}"]`),
+    led: card.querySelector(`[data-led="${z.key}"]`),
+    badge: card.querySelector(`[data-badge="${z.key}"]`)
+  };
+});
+
+/* ============================================================
+   DOM BUILD — SESSION CARDS
+   ============================================================ */
+const sessionGrid = document.getElementById('sessionGrid');
+const sessionEls = {};
+const STATE_LABEL = { active:'ACTIVE', closed:'CLOSED', marketclosed:'MARKET CLOSED' };
+
+SESSIONS.forEach(z => {
+  const card = document.createElement('div');
+  card.className = 'session-card panel';
+  card.innerHTML = `
+    <div class="sc-top">
+      <span class="sc-name">${z.label}</span>
+      <span class="led" data-scled="${z.key}"></span>
+    </div>
+    <div class="sc-time" data-sctime="${z.key}">--:--:--</div>
+    <div class="sc-tz">${z.tz} · ${SESSION_HOURS[z.key].start.toString().padStart(2,'0')}:00–${SESSION_HOURS[z.key].end.toString().padStart(2,'0')}:00 LOCAL</div>
+    <div class="sc-foot">
+      <span class="sc-status-text" data-scstatus="${z.key}">—</span>
+    </div>
+  `;
+  sessionGrid.appendChild(card);
+  sessionEls[z.key] = {
+    card,
+    time: card.querySelector(`[data-sctime="${z.key}"]`),
+    led: card.querySelector(`[data-scled="${z.key}"]`),
+    status: card.querySelector(`[data-scstatus="${z.key}"]`)
+  };
+});
+
+/* ============================================================
+   DOM BUILD — TIMELINE
+   ============================================================ */
+const timelineBody = document.getElementById('timelineBody');
+const tlEls = {};
+SESSIONS.forEach(z => {
+  const row = document.createElement('div');
+  row.className = 'tl-row';
+  row.innerHTML = `
+    <span class="tl-name">${z.label}</span>
+    <div class="tl-track" data-track="${z.key}"></div>
+  `;
+  timelineBody.appendChild(row);
+  tlEls[z.key] = row.querySelector(`[data-track="${z.key}"]`);
+
+  // grid lines every 3h
+  const track = tlEls[z.key];
+  for(let h=0; h<=24; h+=3){
+    const gl = document.createElement('div');
+    gl.className = 'tl-grid-line';
+    gl.style.left = (h/24*100) + '%';
+    track.appendChild(gl);
+  }
+});
+
+/* ============================================================
+   UI RENDERER
+   ============================================================ */
+let prevStates = {};
+
+function pad(n){ return n.toString().padStart(2,'0'); }
+
+// Returns the UTC epoch ms of the most recent local midnight in the given zone,
+// derived from the current instant's local wall-clock time (DST-safe).
+function getLocalMidnightEpoch(tz, now){
+  const local = getLocalParts(tz, now); // weekday/hour/minute only
+  const fullParts = getFormatter(tz).formatToParts(now); // hour/minute/second
+  const map = {};
+  fullParts.forEach(p => map[p.type] = p.value);
+  const h = parseInt(map.hour,10), m = parseInt(map.minute,10), s = parseInt(map.second,10);
+  const msSinceMidnight = (h*3600 + m*60 + s) * 1000 + now.getMilliseconds();
+  return now.getTime() - msSinceMidnight;
+}
+
+function renderTimeline(now, marketOpen){
+  // Axis represents Iran local hours 00–24. We anchor "today" to the most recent
+  // Iran midnight, then sample forward hour by hour, checking each session's own
+  // local time at that real-world instant (DST-safe for every zone involved).
+  const iranMidnight = getLocalMidnightEpoch('Asia/Tehran', now);
+
+  SESSIONS.forEach(z => {
+    const track = tlEls[z.key];
+    // remove old bars (keep grid lines)
+    track.querySelectorAll('.tl-bar').forEach(b => b.remove());
+
+    let segStart = null;
+    for(let h=0; h<=24; h++){
+      let inSession = false;
+      if(h<24){
+        const sample = new Date(iranMidnight + h*3600*1000);
+        const local = getLocalParts(z.tz, sample);
+        const {start,end} = SESSION_HOURS[z.key];
+        inSession = local.weekday !== 0 && local.weekday !== 6 && local.hour >= start && local.hour < end;
+      }
+      if(inSession && segStart === null){
+        segStart = h;
+      } else if(!inSession && segStart !== null){
+        addBar(track, segStart, h, marketOpen);
+        segStart = null;
+      }
+    }
+
+    // now indicator — position based on current Iran local time-of-day
+    let nowLine = track.querySelector('.tl-now-line');
+    if(!nowLine){
+      nowLine = document.createElement('div');
+      nowLine.className = 'tl-now-line';
+      track.appendChild(nowLine);
+    }
+    const nowFrac = (now.getTime() - iranMidnight) / 86400000;
+    nowLine.style.left = (Math.min(Math.max(nowFrac,0),1)*100) + '%';
+  });
+}
+function addBar(track, startH, endH, marketOpen){
+  const bar = document.createElement('div');
+  bar.className = 'tl-bar' + (marketOpen ? '' : ' dim');
+  bar.style.left = (startH/24*100) + '%';
+  bar.style.width = ((endH-startH)/24*100) + '%';
+  track.appendChild(bar);
+}
+
+function render(){
+  const now = new Date();
+
+  // Header clock (UTC)
+  document.getElementById('headerClock').textContent = getTimeString('UTC', now);
+
+  const marketOpen = isMarketOpen(now);
+
+  // World clocks
+  ZONES.forEach(z => {
+    clockEls[z.key].time.textContent = getTimeString(z.tz, now);
+  });
+
+  // Session states
+  const states = {};
+  SESSIONS.forEach(z => {
+    states[z.key] = getSessionState(z.key, now, marketOpen);
+  });
+
+  // Update mini LEDs on world clock cards + badges
+  SESSIONS.forEach(z => {
+    const st = states[z.key];
+    const led = clockEls[z.key].led;
+    led.className = 'led-sm led state-' + st;
+    clockEls[z.key].badge.textContent = STATE_LABEL[st];
+  });
+
+  // Update session cards
+  SESSIONS.forEach(z => {
+    const st = states[z.key];
+    const els = sessionEls[z.key];
+    els.time.textContent = getTimeString(z.tz, now);
+    els.status.textContent = STATE_LABEL[st];
+    els.status.className = 'sc-status-text state-' + st;
+
+    const wasActive = prevStates[z.key] === 'active';
+    els.led.className = 'led state-' + st;
+    els.card.classList.toggle('active', st === 'active');
+
+    if(st === 'active' && !wasActive){
+      els.led.classList.add('pulse-on');
+      els.card.classList.add('flash');
+      setTimeout(()=>{ els.led.classList.remove('pulse-on'); els.card.classList.remove('flash'); }, 1200);
+    }
+  });
+  prevStates = states;
+
+  // Market core
+  const core = document.getElementById('marketCore');
+  const stateH2 = document.getElementById('marketState');
+  const sub = document.getElementById('marketSub');
+  const led = document.getElementById('marketLed');
+  core.classList.toggle('open', marketOpen);
+  core.classList.toggle('closed', !marketOpen);
+  stateH2.textContent = marketOpen ? 'OPEN' : 'CLOSED';
+  sub.textContent = marketOpen ? 'Global trading week in progress' : 'Weekend closure — market reopens Sunday, New York time';
+  led.className = 'led led-big state-' + (marketOpen ? 'active' : 'marketclosed');
+
+  // Overlap detection
+  const activeSessions = SESSIONS.filter(z => states[z.key] === 'active').map(z => z.label);
+  const overlapPanel = document.getElementById('overlapPanel');
+  const overlapBody = document.getElementById('overlapBody');
+  if(activeSessions.length >= 2){
+    overlapPanel.classList.add('active');
+    overlapBody.innerHTML = `
+      <div class="ov-row">
+        <span class="ov-city">${activeSessions[0]}</span>
+        <div class="ov-link"><div class="pulse"></div></div>
+        <span class="ov-city">${activeSessions.slice(1).join(' + ')}</span>
+      </div>
+      <div class="ov-status">● OVERLAP ACTIVE</div>
+    `;
+  } else {
+    overlapPanel.classList.remove('active');
+    overlapBody.innerHTML = `<span class="ov-empty">NO ACTIVE OVERLAP</span>`;
+  }
+
+  // Timeline (rebuild bars once per minute is enough, but cheap so do every tick at second 0)
+  if(now.getUTCSeconds() === 0 || !render._tlInit){
+    renderTimeline(now, marketOpen);
+    render._tlInit = true;
+  } else {
+    // just move the now-line
+    const iranMidnight = getLocalMidnightEpoch('Asia/Tehran', now);
+    SESSIONS.forEach(z => {
+      const track = tlEls[z.key];
+      const nowLine = track.querySelector('.tl-now-line');
+      if(nowLine){
+        const nowFrac = (now.getTime() - iranMidnight) / 86400000;
+        nowLine.style.left = (Math.min(Math.max(nowFrac,0),1)*100) + '%';
+      }
+    });
+  }
+  document.getElementById('tlNowLabel').textContent = 'NOW ' + getTimeString('Asia/Tehran', now) + ' IRAN';
+}
+
+/* ============================================================
+   CONNECTION STATUS
+   ============================================================ */
+function updateConnStatus(){
+  const dot = document.getElementById('connDot');
+  const wrap = document.getElementById('connStatus');
+  const online = navigator.onLine;
+  dot.classList.toggle('off', !online);
+  wrap.lastChild.textContent = online ? 'ONLINE' : 'OFFLINE';
+}
+window.addEventListener('online', updateConnStatus);
+window.addEventListener('offline', updateConnStatus);
+
+/* ============================================================
+   REFRESH BUTTON
+   ============================================================ */
+document.getElementById('refreshBtn').addEventListener('click', function(){
+  this.classList.add('spin');
+  render._tlInit = false;
+  render();
+  setTimeout(()=>this.classList.remove('spin'), 400);
+});
+
+/* ============================================================
+   MATRIX BACKGROUND CANVAS (subtle, atmospheric)
+   ============================================================ */
+(function initMatrixCanvas(){
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let w,h,cols,drops;
+  const chars = 'アイウエオカキクケコサシスセソタチツテト0123456789';
+  const fontSize = 15;
+
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    cols = Math.floor(w / fontSize);
+    drops = new Array(cols).fill(0).map(()=> Math.random() * -100);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  if(reduceMotion){
+    return; // no animation, keep background static/empty
+  }
+
+  function draw(){
+    ctx.fillStyle = 'rgba(5,7,6,0.09)';
+    ctx.fillRect(0,0,w,h);
+    ctx.font = fontSize + 'px monospace';
+    for(let i=0;i<cols;i++){
+      const text = chars[Math.floor(Math.random()*chars.length)];
+      const y = drops[i]*fontSize;
+      ctx.fillStyle = 'rgba(57,255,143,0.55)';
+      ctx.fillText(text, i*fontSize, y);
+      if(y > h && Math.random() > 0.975){
+        drops[i] = 0;
+      }
+      drops[i] += 0.55;
+    }
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+
+/* ============================================================
+   MAIN LOOP
+   ============================================================ */
+updateConnStatus();
+render();
+setInterval(render, 1000);
+
+})();
+</script>
+</body>
+</html>
